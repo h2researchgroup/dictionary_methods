@@ -153,3 +153,4 @@ amend_df(df, files)
 
 # df.to_pickle('pickles/part{}.pickle'.format(n))
 df.set_index('file_name').to_hdf(os.path.join(OUTPATH, 'part{}.h5'.format(NUM)), key='metadata', mode='w')
+#df.set_index('file_name').to_pickle(os.path.join(OUTPATH, 'part{}.pickle'.format(NUM)))

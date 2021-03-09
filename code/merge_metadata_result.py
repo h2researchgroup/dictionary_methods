@@ -11,6 +11,7 @@ data = pd.DataFrame()
 
 for i in range(1, int(NUM_PARTS) + 1):
     df = pd.read_hdf(join(METADATA_HOME, 'part{}.h5'.format(i)))
+    #df = pd.read_pickle(join(METADATA_HOME, 'part{}.pickle'.format(i))) # note file format
     data = data.append(df)
 
 data.loc[data.journal_title == 'Industrial and Labor Relations Review', 'journal_title'] = 'ILR Review'
@@ -38,3 +39,4 @@ merged = merged[~merged.primary_subject.isnull()] # drop if has no journal, or j
 merged.loc[~merged.primary_subject.isin(['Sociology', 'Management & Organizational Behavior']), 'primary_subject'] = 'Other' # rename primary subject as "other" if not in sociology/OB
 
 merged.to_hdf(OUTFILE, key='metadata', mode='w')
+#merged.to_pickle(OUTFILE)
