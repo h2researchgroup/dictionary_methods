@@ -8,7 +8,7 @@
 @contact: jhaber@berkeley.edu
 @inputs: list of authors
 @outputs: count of authors (citation_and_expanded_dict_count_{thisdate}.csv), where 'thisdate' is in mmddyy format 
-@description: Counts references to canonical authors in articles by ngrams. To count a new list of terms or author names in the ngram files, change the list of words in the 'Update Words' section and/or change the word type to count (between 'citations' and 'terms', i.e. dictionaries), then run the script via `sudo python3 citation_count.py`. Then update the input file in merge_counts_dfs.ipynb and run all cells in that notebook.
+@description: Counts mentions of individual words or authors--NOT separated by perspective as in previous versions--in articles by using ngram files. To count a new list of terms or author names in the ngram files, change the list of words in the 'Update Words' section and/or change the word type to count (between 'citations' and 'terms', i.e. dictionaries), then run the script via `sudo python3 citation_count.py`. Then update the input file in merge_counts_dfs.ipynb and run all cells in that notebook.
 '''
 
 
@@ -56,9 +56,8 @@ demographic_authors = ['hannan freeman', 'barnett carroll', 'barron west', 'brü
 relational_authors = ['pfeffer salancik', 'burt christman', 'pfeffer nowak', 'pfeffer']
 cultural_authors = ['meyer rowan', 'dimaggio powell', 'powell dimaggio', 'oliver', 'powell', 'scott', 'weick']
 
-ALL_WORDS = set(demographic_authors + relational_authors + cultural_authors)
-
-word_types_list = [cultural_authors, demographic_authors, relational_authors]
+ALL_WORDS = set(demographic_authors + relational_authors + cultural_authors) # full list of authors
+ALL_WORDS_COUNTS = [(re.sub(" ", "_", word) + "_count") for word in list(ALL_WORDS)] # cleaned version
 '''
 
 ## Capture foundational terms
@@ -78,9 +77,8 @@ relt_orig = pd.read_csv('../dictionaries/original/relational_original.csv', deli
                         header=None)[0].apply(lambda x: x.replace(',', ' '))
 relational_terms = relt_orig.tolist()
 
-ALL_WORDS = set(demographic_terms + relational_terms + cultural_terms) # full list of dictionaries
-
-word_types_list = [cultural_terms, demographic_terms, relational_terms]
+ALL_WORDS = list(set(demographic_terms + relational_terms + cultural_terms)) # full list of dictionaries
+ALL_WORDS_COUNTS = [(re.sub(" ", "_", word) + "_count") for word in list(ALL_WORDS)] # cleaned version
 
 
 ###############################################
@@ -101,8 +99,10 @@ def generate_ngram_counts(ngram_value, counts_df, ALL_WORDS, JSTOR_HOME):
         counts_df (pd.DataFrame): updated with columns for counts
     '''
     
+    global ALL_WORDS_COUNTS, files # cleaned version of vocab; list of files
+    
     if (ngram_value > 3) or (ngram_value < 1):
-        print(f"ERROR: Unable to count entries of {ngram_value} length. Please limit the word number to 1-3.")
+        raise Exception(f"Unable to count entries of {ngram_value} length. Please limit the word number to 1-3.")
         sys.exit()
     
     folder = os.path.join(JSTOR_HOME, 'ngram{}'.format(ngram_value))
@@ -110,53 +110,52 @@ def generate_ngram_counts(ngram_value, counts_df, ALL_WORDS, JSTOR_HOME):
     for file in tqdm(files):
         with open(os.path.join(folder, '{}-ngram{}.txt'.format(file, ngram_value)), 'r') as f:
 
-            file_dict = {}
+            file_dict = {} # initialize dict for relevant vocab from article
 
             for line in f.read().splitlines():
-                k, v = line.split('\t')
-                if k in ALL_WORDS:
-                    file_dict[k] = int(v)
+                word, count = line.split('\t')
+                if word in ALL_WORDS:
+                    file_dict[word] = int(count)
                     
-            if (ngram_value == 1):
-                for word in ALL_WORDS:
-                    counts_df.at[file, word + "_count"] = file_dict.get(word, 0)
-                
-            else: # ngram_value == 2 or 3
-                row = {"article_id": file}
-                for word in ALL_WORDS:
-                    row[word + "_count"] = file_dict.get(word, 0)
-
-                counts_df = counts_df.append(row, ignore_index=True)
+            # Create empty dict for row, with article id
+            row = {key: None for key in ALL_WORDS_COUNTS}
+            row['article_id'] = file #row = {"article_id": file}
             
-            counts_df = counts_df.set_index('article_id')
+            # For each word, assign counts to row
+            for word_idx in range(len(ALL_WORDS_COUNTS)):
+                row[ALL_WORDS_COUNTS[word_idx]] = file_dict.get(ALL_WORDS[word_idx], 0)
+            
+            counts_df = counts_df.append(row, ignore_index=True) # add row for article to DF
+    
+    return counts_df
 
         
 ################################################
 #                 Count words                  #
 ################################################
 
-counts_df = pd.DataFrame(columns=["article_id"]+[(re.sub(" ", "_", word) + "_count") for word in list(ALL_WORDS)])
-
-perspective_types = ["cultural", "demographic", "relational"]
-
+counts_df = pd.DataFrame(columns=["article_id"]+ALL_WORDS_COUNTS)
 
 if not words_type:
-    print("ERROR: No type specified. Check the script to specify 'citations' or 'words' as counting target.")
+    raise Exception("No type specified. Check the script to specify 'citations' or 'words' as counting target.")
     sys.exit()
 
 print(f'Counting {words_type}...')
 
-generate_ngram_counts(3, counts_df, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count trigrams
-generate_ngram_counts(2, counts_df, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count bigrams
-generate_ngram_counts(1, counts_df, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count unigrams
+counts_df = generate_ngram_counts(3, counts_df, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count trigrams
 
+counts_df = generate_ngram_counts(2, counts_df, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count bigrams
+counts_df = counts_df.groupby('article_id').sum().reset_index(drop = False) # collapse to save space
+
+counts_df = generate_ngram_counts(1, counts_df, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count unigrams
+counts_df = counts_df.groupby('article_id').sum().reset_index(drop = False) # collapse so one article = one row
                 
 #################################################
 #                Save output file               #
 #################################################
 
 thisday = date.today().strftime("%m%d%y") # get current date
-counts_df.to_csv(f'{words_type}_count_{thisday}.csv', index=True)
+counts_df.to_csv(f'{words_type}_count_{thisday}.csv', index=False)
 
 print(f"Saved counts to file.")
 

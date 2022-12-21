@@ -1,3 +1,4 @@
+__pycache__/
 engagement_results/
 imgs/
 log/
@@ -6,4 +7,4 @@ metadata/
 metadata_results/
 n-gram/
 ngram_results/
-__pycache__/
+code/*.csv
