@@ -1,0 +1,10 @@
+__pycache__/
+engagement_results/
+imgs/
+log/
+map_results/
+metadata/
+metadata_results/
+n-gram/
+ngram_results/
+code/*.csv
