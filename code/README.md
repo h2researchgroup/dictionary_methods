@@ -1,8 +1,6 @@
-# File Descriptions
+# Pipeline for processing raw data from JSTOR 
 
-![Data Flow**](workflow_dec2019.png)
-
-## User-friendly notebooks
+## 0. User-friendly notebooks
 
 **[`Citation_Count.ipynb`](Citation_Count.ipynb)**
 - Inputs: a list of authors in the three organizational perspective categories
@@ -17,6 +15,10 @@
 - Inputs: file that contains metadata about every article and a file that contains all the n-gram counts of each article
 - Outputs: line plot showing trends in language over time
 
+## Diagram of data pipeline 
+**(scripts and files enumerated below)**
+
+![Data Flow**](workflow_dec2019.png)
 
 ## 1. Pipeline scripts
 
