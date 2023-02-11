@@ -46,14 +46,15 @@ JSTOR_HOME = join(root, 'jstor_data')
 INDICES_LIST = [file for file in listdir(INDICES_HOME) if isfile(join(INDICES_HOME, file))] # files only
 DECADE = str(sys.argv[1]) # note hyphen in middle
 assert DECADE.__contains__('-'), 'Wrong format for DECADE: must contain a hypen, e.g. 1971-1981 (quotation marks optional)'
+assert DECADE in ['1971-1981', '1982-1992', '1993-2003', '2004-2014'], f'Cannot parse decade of {DECADE}; only acceptable ranges are 1971-1981, 1982-1992, 1993-2003, 2004-2014'
 INDICES = [file for file in INDICES_LIST if ('_' + DECADE + '_') in file]
 assert len(INDICES) == 1, f'Found {str(len(INDICES))} filepath lists in {INDICES_HOME} to count in {str(DECADE)}, expected just 1'
 INDICES = join(INDICES_HOME, INDICES[0]) # get full filepath
 
 # get full list of filepaths
 with open(INDICES, 'r') as f:
-    files = f.read().split('\n')[1:]
-    files = [fp.split(',')[1] for fp in files[:20]] # ignore index; get filepath only
+    files = f.read().split('\n')[1:-1]
+    files = [fp.split(',')[1] for fp in files] # ignore index; get filepath only
 
     
 ###############################################
