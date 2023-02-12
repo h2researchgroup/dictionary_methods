@@ -54,7 +54,7 @@ INDICES = join(INDICES_HOME, INDICES[0]) # get full filepath
 # get full list of filepaths
 with open(INDICES, 'r') as f:
     files = f.read().split('\n')[1:-1]
-    files = [fp.split(',')[1] for fp in files] # ignore index; get filepath only
+    files = [fp.split(',')[1] for fp in files[:1000]] # ignore index; get filepath only
 
     
 ###############################################
@@ -100,26 +100,28 @@ WORDS_PERSPECTIVES_DICT = {word: persp for word, persp in list(zip(ALL_WORDS, AL
 #          Define counting functions          #
 ###############################################
 
-def generate_ngram_counts(ngram_value:int, counts_df:pd.DataFrame(), files:list, ALL_WORDS:list, JSTOR_HOME:str):
+def generate_ngram_counts(ngram_value:int, files:list, ALL_WORDS:list, JSTOR_HOME:str):
     '''Generates ngram counts by parsing through JSTOR article files, and collecting and storing the word counts 
     for the words used in the JSTOR article. 
     
     Args: 
         ngram_value (int): how many words to count: 1 = unigram, 2 = bigram, 3 = trigram
-        counts_df (pd.DataFrame): the dataframe to update
         files (list): list of all article filepaths
-        ALL_WORDS (list): list of words to count
+        ALL_TERMS (list): list of all words to count (regardless of whether unigram, bigram, etc.)
         JSTOR_HOME (str): path to top-level folder, under which are folders with ngram data
     
     Returns:
-        counts_df (pd.DataFrame): updated with columns for counts
+        counts_df (pd.DataFrame): DataFrame with columns for words, values for counts
     '''
     
     # Check that ngram_value between 1 and 3
     assert (ngram_value>=1 and ngram_value<=3), f"Unable to count entries of {ngram_value} length. Please limit the word number to 1-3."
         
     # Filter ALL_WORDS to length of ngram_value (to improve counting speed)
-    ALL_WORDS = [term for term in ALL_WORDS if len(term.split())==ngram_value]
+    terms = [term for term in ALL_WORDS if len(term.split('_'))==ngram_value]
+    
+    # Initialize DataFrame to store counting results
+    counts_df = pd.DataFrame(columns=["article_id"]+terms)
     
     folder = join(JSTOR_HOME, f'ngram{ngram_value}')
 
@@ -130,16 +132,13 @@ def generate_ngram_counts(ngram_value:int, counts_df:pd.DataFrame(), files:list,
 
             for line in f.read().splitlines():
                 word, count = line.split('\t')
-                if word in ALL_WORDS:
+                word = word.replace(' ', '_') # to match dictionary format, use underscores to separate words
+                if word in terms:
                     file_dict[word] = int(count)
                     
-            # Create empty dict for row, with article id
-            row = {key: None for key in ALL_WORDS}
+            # Create dict for row, with word:count and article id:file
+            row = {word: file_dict.get(word, 0) for word in terms}
             row['article_id'] = file #row = {"article_id": file}
-            
-            # For each word, assign counts to row
-            for word_idx in range(len(ALL_WORDS)):
-                row[ALL_WORDS[word_idx]] = file_dict.get(ALL_WORDS[word_idx], 0)
             
             counts_df = counts_df.append(row, ignore_index=True) # add row for article to DF
     
@@ -150,27 +149,23 @@ def generate_ngram_counts(ngram_value:int, counts_df:pd.DataFrame(), files:list,
 #                 Count words                  #
 ################################################
 
-counts_df = pd.DataFrame(columns=["article_id"]+ALL_WORDS)
-
 assert words_type, "No type specified. Check the script to specify 'citations' or 'words' as counting target."
-
 print(f'Counting {words_type}...')
 
-counts_df = generate_ngram_counts(3, counts_df, files=files, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count trigrams
+trigram_counts_df = generate_ngram_counts(3, files=files, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count trigrams
 
-counts_df = generate_ngram_counts(2, counts_df, files=files, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count bigrams
-counts_df = counts_df.reset_index(drop = False).groupby('article_id').sum() # collapse to save space
+bigram_counts_df = generate_ngram_counts(2, files=files, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count bigrams
+counts_df = pd.concat([trigram_counts_df, bigram_counts_df], axis=1) # merge bigram + trigram counts
 
-counts_df = generate_ngram_counts(1, counts_df, files=files, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count unigrams
-counts_df = counts_df.reset_index(drop = False).groupby('article_id').sum().drop(columns=['level_0']) # collapse so one article = one row
+unigram_counts_df = generate_ngram_counts(1, files=files, ALL_WORDS=ALL_WORDS, JSTOR_HOME=JSTOR_HOME) # Count unigrams
+counts_df = pd.concat([counts_df, unigram_counts_df], axis=1) # merge unigram counts with the rest
 
 
 ################################################
 #       Transpose terms from cols to rows      #
 ################################################
 
-counts_df = counts_df.sum(axis=0).drop(index='index').reset_index(drop=False) # sum across articles
-#counts_df = counts_df.transpose().reset_index(drop=False) # make terms into rows
+counts_df = counts_df.sum(axis=0).drop(index='article_id').reset_index(drop=False) # sum across articles
 counts_df.columns = ['term', 'count']
 counts_df['count'] = counts_df['count'].astype(int) # cast as int
 
@@ -186,7 +181,7 @@ counts_df.sort_values(['perspective', 'count'], inplace=True)
 #################################################
 
 thisday = date.today().strftime("%m%d%y") # get current date
-counts_df.to_csv(join(DATA_HOME, f'{words_type}_count_{DECADE}_{thisday}.csv'), index=False)
+counts_df.to_csv(join(DATA_HOME, f'TEST_{words_type}_count_{DECADE}_{thisday}.csv'), index=False)
 
 print(f"Saved counts to file.")
 
