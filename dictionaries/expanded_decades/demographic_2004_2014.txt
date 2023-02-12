@@ -2,7 +2,6 @@ accountability
 adaptation
 adaptive
 carrying_capacity
-competency_trap
 competitive_intensity
 competitive_pressure
 competitive_pressures
@@ -26,11 +25,8 @@ imprinting
 inertia
 inertial
 legitimacy
-legitimate
 liabilities_newness
-liability_adolescence
 liability_newness
-obsolescence
 liability_smallness
 localized_competition
 market_share
@@ -42,7 +38,6 @@ organizational_form
 population
 populations
 red_queen
-resetting_clock
 resistance_change
 resource_partitioning
 selection

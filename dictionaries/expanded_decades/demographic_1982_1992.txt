@@ -1,11 +1,9 @@
 accountability
 adaptation
 adaptive
-buffering_shields
 carrying_capacities
 carrying_capacity
 coarse_grained
-competitive_exclusion
 competitive_pressures
 death_rate
 death_rates
@@ -23,11 +21,9 @@ fitness
 founding
 generalist
 generalists
-highly_reproducible
 inertia
 inertial
 legitimacy
-legitimate
 liabilities_newness
 liability_newness
 liability_smallness
@@ -39,10 +35,8 @@ obsolescence
 organizational_change
 organizational_form
 organizational_forms
-peripheral_features
 population
 populations
-resistance_change
 resource_partitioning
 selection
 size_localized

@@ -11,7 +11,6 @@ co_operation
 coalition
 coalitions
 conglomerate
-conglomerates
 connections
 constrain
 constraint
@@ -20,14 +19,12 @@ control
 cooperate
 cooperation
 cooperative
-corporate_directorates
 decentralization
 decentralized
 dependence
 dependencies
 dependency
 dependent
-directorship_ties
 diversification
 diversify
 dominance
@@ -36,16 +33,12 @@ exchanges
 external
 horizontal
 influence
-inter_organizational_network
-inter_organizational_networks
 interdependence
 interdependent
 interlock
 interlocked
 interlocking
 interlocks
-interorganizational_network
-interorganizational_networks
 joint_venture
 joint_ventures
 linkages
@@ -54,5 +47,4 @@ merge
 merged
 merger
 mergers
-resource_dependence
 vertical

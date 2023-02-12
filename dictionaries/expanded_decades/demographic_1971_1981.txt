@@ -28,7 +28,6 @@ inertia
 inertial
 legitimacy
 legitimate
-localized_competition
 mortality
 niche
 niches
@@ -38,11 +37,9 @@ organizational_form
 organizational_forms
 population
 populations
-red_queen
 resistance_change
 selection
 selective_retention
-senescence
 specialism
 specialist
 specialization

@@ -46,7 +46,7 @@ JSTOR_HOME = join(root, 'jstor_data')
 INDICES_LIST = [file for file in listdir(INDICES_HOME) if isfile(join(INDICES_HOME, file))] # files only
 DECADE = str(sys.argv[1]) # note hyphen in middle
 assert DECADE.__contains__('-'), 'Wrong format for DECADE: must contain a hypen, e.g. 1971-1981 (quotation marks optional)'
-assert DECADE in ['1971-1981', '1982-1992', '1993-2003', '2004-2014'], f'Cannot parse decade of {DECADE}; only acceptable ranges are 1971-1981, 1982-1992, 1993-2003, 2004-2014'
+assert DECADE in ['1971-1981', '1982-1992', '1993-2003', '2004-2014'], f'Cannot parse decade of {DECADE}; only acceptable ranges are: 1971-1981, 1982-1992, 1993-2003, 2004-2014'
 INDICES = [file for file in INDICES_LIST if ('_' + DECADE + '_') in file]
 assert len(INDICES) == 1, f'Found {str(len(INDICES))} filepath lists in {INDICES_HOME} to count in {str(DECADE)}, expected just 1'
 INDICES = join(INDICES_HOME, INDICES[0]) # get full filepath
@@ -54,7 +54,7 @@ INDICES = join(INDICES_HOME, INDICES[0]) # get full filepath
 # get full list of filepaths
 with open(INDICES, 'r') as f:
     files = f.read().split('\n')[1:-1]
-    files = [fp.split(',')[1] for fp in files[:1000]] # ignore index; get filepath only
+    files = [fp.split(',')[1] for fp in files] # ignore index; get filepath only
 
     
 ###############################################
@@ -86,7 +86,7 @@ relt = pd.read_csv(join(DICTS_HOME, f'expanded_decades/relational_{DECADE_UNDER}
 cult = pd.read_csv(join(DICTS_HOME, f'expanded_decades/cultural_{DECADE_UNDER}.txt'), delimiter = '\n', 
                         header=None)[0].apply(lambda word: word.replace(',', ' ')).tolist()
 
-ALL_WORDS = dem + relt + cult # full list of dictionaries
+ALL_WORDS = dem + relt + cult # full list of dictionaries; note underscores to separate ngrams
 
 # make word:perspective dictionary for output
 ALL_WORDS_PERSPECTIVES = ['demographic' for term in dem] + \
@@ -118,7 +118,7 @@ def generate_ngram_counts(ngram_value:int, files:list, ALL_WORDS:list, JSTOR_HOM
     assert (ngram_value>=1 and ngram_value<=3), f"Unable to count entries of {ngram_value} length. Please limit the word number to 1-3."
         
     # Filter ALL_WORDS to length of ngram_value (to improve counting speed)
-    terms = [term for term in ALL_WORDS if len(term.split('_'))==ngram_value]
+    terms = [term for term in ALL_WORDS if len(term.split('_'))==ngram_value] # underscores separate words
     
     # Initialize DataFrame to store counting results
     counts_df = pd.DataFrame(columns=["article_id"]+terms)
@@ -181,7 +181,7 @@ counts_df.sort_values(['perspective', 'count'], inplace=True)
 #################################################
 
 thisday = date.today().strftime("%m%d%y") # get current date
-counts_df.to_csv(join(DATA_HOME, f'TEST_{words_type}_count_{DECADE}_{thisday}.csv'), index=False)
+counts_df.to_csv(join(DATA_HOME, f'{words_type}_count_{DECADE}_{thisday}.csv'), index=False)
 
 print(f"Saved counts to file.")
 

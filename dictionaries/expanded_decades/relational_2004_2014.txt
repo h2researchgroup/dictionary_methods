@@ -2,11 +2,9 @@ acquisitions
 alliance
 alliance_formation
 alliances
-arm_length
 board
 board_directors
 boards_directors
-buffer
 coalition
 coalitions
 collaboration
@@ -30,7 +28,6 @@ governance_structures
 horizontal
 independent
 influence
-inter_organizational_network
 inter_organizational_networks
 interdependence
 interdependent
