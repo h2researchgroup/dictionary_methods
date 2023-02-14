@@ -183,6 +183,17 @@ meta_df = pd.read_pickle(METADATA).drop(columns='abstract') # load metadata, cut
 counts_df['doi'] = counts_df['article_id'].apply(lambda fname: fname.split('-')[-1]) # get DOI from file name, e.g. 'journal-article-10.2307_2065002' -> '10.2307_2065002'
 counts_df = pd.merge(counts_df, meta_df, how='left', on='doi')
 
+# Calculate ratios: perspective word count over total word count per article
+counts_df['demographic_ratio'] = counts_df.demographic_count/counts_df.wordCount
+counts_df['relational_ratio'] = counts_df.relational_count/counts_df.wordCount
+counts_df['cultural_ratio'] = counts_df.cultural_count/counts_df.wordCount
+
+counts_df = counts_df[['article_id', 'doi', 'jstor_url', 'publicationYear', 
+                      'article_name', 'primary_subject', 'journal_title', 
+                      'creator', 'file_name', 'wordCount', 'pageCount', 
+                      'demographic_count', 'relational_count', 'cultural_count',
+                      'demographic_ratio', 'relational_ratio', 'cultural_ratio']]
+
 
 #################################################
 #                Save output file               #
